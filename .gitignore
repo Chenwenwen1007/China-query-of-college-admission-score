@@ -14,15 +14,9 @@ pip-log.txt
 *.sqlite3-shm
 *.sqlite3-wal
 
-# 原始招生数据文件（官方 PDF / Excel / ZIP，运行脚本时自动下载）
-raw/*.pdf
-raw/*.xlsx
-raw/*.xls
-raw/*.zip
-raw/**/*.pdf
-raw/**/*.xlsx
-raw/**/*.xls
-raw/**/*.zip
+# 原始招生数据文件（官方 PDF / Excel / ZIP / 静态数据，运行脚本时自动下载）
+raw/*
+!raw/.gitkeep
 
 # 临时文件
 tmp_*.json
