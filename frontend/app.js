@@ -2,6 +2,7 @@ const STORAGE_KEYS = {
   apiBase: "hunanAdmissions.apiBase",
   province: "hunanAdmissions.province",
   favoritesPrefix: "hunanAdmissions.favoriteSchools.",
+  hideScrollTopDock: "hunanAdmissions.hideScrollTopDock",
 };
 
 const state = {
@@ -10,6 +11,8 @@ const state = {
   currentPayload: null,
   currentTier: "",
   currentProvince: "",
+  currentPage: 1,
+  hideScrollTopDock: false,
   favorites: new Set(),
   schoolDetailCache: new Map(),
 };
@@ -39,6 +42,20 @@ const els = {
   resetButton: document.querySelector("#resetButton"),
   summaryCards: document.querySelector("#summaryCards"),
   tierTabs: document.querySelector("#tierTabs"),
+  paginationBarTop: document.querySelector("#paginationBarTop"),
+  paginationSummary: document.querySelector("#paginationSummary"),
+  pageNumberList: document.querySelector("#pageNumberList"),
+  prevPageButton: document.querySelector("#prevPageButton"),
+  nextPageButton: document.querySelector("#nextPageButton"),
+  jumpPageForm: document.querySelector("#jumpPageForm"),
+  jumpPageInput: document.querySelector("#jumpPageInput"),
+  paginationBarBottom: document.querySelector("#paginationBarBottom"),
+  paginationSummaryBottom: document.querySelector("#paginationSummaryBottom"),
+  pageNumberListBottom: document.querySelector("#pageNumberListBottom"),
+  prevPageButtonBottom: document.querySelector("#prevPageButtonBottom"),
+  nextPageButtonBottom: document.querySelector("#nextPageButtonBottom"),
+  jumpPageFormBottom: document.querySelector("#jumpPageFormBottom"),
+  jumpPageInputBottom: document.querySelector("#jumpPageInputBottom"),
   results: document.querySelector("#results"),
   statusText: document.querySelector("#statusText"),
   favoritesPanel: document.querySelector("#favoritesPanel"),
@@ -48,6 +65,7 @@ const els = {
   exportFavoritesCsvButton: document.querySelector("#exportFavoritesCsvButton"),
   exportFavoritesExcelButton: document.querySelector("#exportFavoritesExcelButton"),
   usageHintApi: document.querySelector("#usageHintApi"),
+  showScrollTopDockButton: document.querySelector("#showScrollTopDockButton"),
   dataScopePanel: document.querySelector("#dataScopePanel"),
   legacySchoolLinesSection: document.querySelector("#legacySchoolLinesSection"),
   legacySchoolLinesSummary: document.querySelector("#legacySchoolLinesSummary"),
@@ -64,6 +82,9 @@ const els = {
   detailDialogChart: document.querySelector("#detailDialogChart"),
   detailDialogYears: document.querySelector("#detailDialogYears"),
   detailDialogNote: document.querySelector("#detailDialogNote"),
+  scrollTopDock: document.querySelector("#scrollTopDock"),
+  scrollTopButton: document.querySelector("#scrollTopButton"),
+  scrollTopHideButton: document.querySelector("#scrollTopHideButton"),
 };
 
 function formatNumber(value) {
@@ -120,6 +141,14 @@ function syncProvinceUrl(provinceSlug) {
 function setConnectionState(text, type = "") {
   els.connectionState.textContent = text;
   els.connectionState.dataset.state = type;
+}
+
+function loadUiPreferences() {
+  state.hideScrollTopDock = localStorage.getItem(STORAGE_KEYS.hideScrollTopDock) === "1";
+}
+
+function saveUiPreferences() {
+  localStorage.setItem(STORAGE_KEYS.hideScrollTopDock, state.hideScrollTopDock ? "1" : "0");
 }
 
 function createTag(text, className = "") {
@@ -312,7 +341,7 @@ function renderSummary(summary, query) {
     { label: "匹配学校", value: `${formatNumber(summary.school_count)} 所` },
     { label: "匹配专业组", value: `${formatNumber(summary.group_count)} 个` },
     { label: "匹配专业", value: `${formatNumber(summary.major_count)} 个` },
-    { label: "本页显示", value: `${formatNumber(summary.returned_group_count)} 个组` },
+    { label: "当前页学校", value: `${formatNumber(summary.page_school_count ?? summary.school_count)} 所` },
     { label: "已收藏学校", value: `${formatNumber(summary.favorite_school_count)} 所` },
   ];
 
@@ -336,6 +365,179 @@ function renderSummary(summary, query) {
       </div>
     `,
   );
+}
+
+function groupResultsBySchool(groups) {
+  const tierRank = { 冲: 0, 稳: 1, 保: 2 };
+  const schoolMap = new Map();
+
+  for (const group of groups) {
+    if (!schoolMap.has(group.school_name)) {
+      schoolMap.set(group.school_name, {
+        school_name: group.school_name,
+        school_code: group.school_code,
+        is_favorite: group.is_favorite,
+        groups: [],
+        major_count: 0,
+        best_score: group.score,
+        best_year: group.year,
+        best_tier_rank: tierRank[group.recommendation_tier],
+      });
+    }
+
+    const school = schoolMap.get(group.school_name);
+    school.groups.push(group);
+    school.major_count += group.major_count;
+
+    const currentRank = tierRank[group.recommendation_tier];
+    if (
+      currentRank < school.best_tier_rank ||
+      (currentRank === school.best_tier_rank && group.score > school.best_score) ||
+      (currentRank === school.best_tier_rank && group.score === school.best_score && group.year > school.best_year)
+    ) {
+      school.best_tier_rank = currentRank;
+      school.best_score = group.score;
+      school.best_year = group.year;
+    }
+  }
+
+  const schools = [...schoolMap.values()];
+  for (const school of schools) {
+    school.groups.sort((a, b) => {
+      const rankDiff = tierRank[a.recommendation_tier] - tierRank[b.recommendation_tier];
+      if (rankDiff !== 0) {
+        return rankDiff;
+      }
+      return b.score - a.score || b.year - a.year || a.official_group_code.localeCompare(b.official_group_code, "zh-CN");
+    });
+    school.primary_group = school.groups[0];
+    const years = [...new Set(school.groups.map((group) => group.year))].sort((a, b) => b - a);
+    school.year_label = years.length > 1 ? `${Math.min(...years)}-${Math.max(...years)} 年` : `${years[0]} 年`;
+    school.group_count = school.groups.length;
+  }
+
+  schools.sort((a, b) => {
+    return (
+      a.best_tier_rank - b.best_tier_rank ||
+      b.best_score - a.best_score ||
+      b.best_year - a.best_year ||
+      a.school_name.localeCompare(b.school_name, "zh-CN")
+    );
+  });
+
+  return schools;
+}
+
+function paginateSchools(schools, pageSize, page) {
+  const totalPages = Math.max(1, Math.ceil(schools.length / pageSize));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * pageSize;
+  const items = schools.slice(start, start + pageSize);
+  return {
+    items,
+    page: safePage,
+    pageSize,
+    totalPages,
+    totalSchoolCount: schools.length,
+  };
+}
+
+function buildPageList(currentPage, totalPages) {
+  const pages = [];
+  const start = Math.max(1, currentPage - 2);
+  const end = Math.min(totalPages, currentPage + 2);
+
+  if (start > 1) {
+    pages.push(1);
+    if (start > 2) {
+      pages.push("ellipsis-left");
+    }
+  }
+
+  for (let page = start; page <= end; page += 1) {
+    pages.push(page);
+  }
+
+  if (end < totalPages) {
+    if (end < totalPages - 1) {
+      pages.push("ellipsis-right");
+    }
+    pages.push(totalPages);
+  }
+
+  return pages;
+}
+
+function renderPageNumberList(container, currentPage, totalPages) {
+  container.innerHTML = "";
+  for (const pageItem of buildPageList(currentPage, totalPages)) {
+    if (typeof pageItem !== "number") {
+      const ellipsis = document.createElement("span");
+      ellipsis.className = "page-ellipsis";
+      ellipsis.textContent = "…";
+      container.append(ellipsis);
+      continue;
+    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "page-number-button";
+    button.dataset.page = String(pageItem);
+    button.dataset.active = pageItem === currentPage ? "true" : "false";
+    button.textContent = String(pageItem);
+    container.append(button);
+  }
+}
+
+function renderPagination(pagination) {
+  if (pagination.totalSchoolCount <= 0) {
+    els.paginationBarTop.hidden = true;
+    els.paginationBarBottom.hidden = true;
+    els.pageNumberList.innerHTML = "";
+    els.pageNumberListBottom.innerHTML = "";
+    els.paginationSummary.textContent = "";
+    els.paginationSummaryBottom.textContent = "";
+    return;
+  }
+
+  els.paginationBarTop.hidden = false;
+  els.paginationBarBottom.hidden = false;
+  const start = (pagination.page - 1) * pagination.pageSize + 1;
+  const end = start + pagination.items.length - 1;
+  const summaryText =
+    `共 ${formatNumber(pagination.totalSchoolCount)} 所学校，第 ${pagination.page} / ${pagination.totalPages} 页，当前显示 ${formatNumber(start)}-${formatNumber(end)}。`;
+  els.paginationSummary.textContent = summaryText;
+  els.paginationSummaryBottom.textContent = summaryText;
+
+  const isFirstPage = pagination.page <= 1;
+  const isLastPage = pagination.page >= pagination.totalPages;
+  els.prevPageButton.disabled = isFirstPage;
+  els.prevPageButtonBottom.disabled = isFirstPage;
+  els.nextPageButton.disabled = isLastPage;
+  els.nextPageButtonBottom.disabled = isLastPage;
+  els.jumpPageInput.value = String(pagination.page);
+  els.jumpPageInputBottom.value = String(pagination.page);
+  els.jumpPageInput.max = String(pagination.totalPages);
+  els.jumpPageInputBottom.max = String(pagination.totalPages);
+
+  renderPageNumberList(els.pageNumberList, pagination.page, pagination.totalPages);
+  renderPageNumberList(els.pageNumberListBottom, pagination.page, pagination.totalPages);
+}
+
+function renderScrollTopDock() {
+  const shouldShow = !state.hideScrollTopDock && window.scrollY > 280;
+  els.scrollTopDock.hidden = !shouldShow;
+  els.showScrollTopDockButton.hidden = !state.hideScrollTopDock;
+}
+
+function goToPage(page) {
+  if (!state.currentPayload) {
+    return;
+  }
+  const totalPages = state.currentPayload.pagination.totalPages;
+  const nextPage = Math.min(Math.max(page, 1), totalPages);
+  state.currentPage = nextPage;
+  renderResults(state.currentPayload);
+  els.statusText.textContent = `已切换到第 ${state.currentPage} 页`;
 }
 
 function renderTierTabs(summary) {
@@ -619,12 +821,26 @@ async function openSchoolDetail(schoolName) {
 }
 
 function renderResults(payload) {
-  state.currentPayload = payload;
-  renderSummary(payload.summary, payload.query);
-  renderTierTabs(payload.summary);
+  const schools = groupResultsBySchool(payload.groups);
+  const pageSize = Number(els.limitInput.value || 25);
+  const pagination = paginateSchools(schools, pageSize, state.currentPage);
+  const summary = {
+    ...payload.summary,
+    school_count: schools.length,
+    page_school_count: pagination.items.length,
+  };
+  state.currentPayload = {
+    ...payload,
+    schools,
+    pagination,
+    summary,
+  };
+  renderSummary(summary, payload.query);
+  renderTierTabs(summary);
+  renderPagination(pagination);
   els.results.innerHTML = "";
 
-  if (!payload.groups.length) {
+  if (!schools.length) {
     const reason = payload.query.favorites_only
       ? "当前开启了“只看已收藏学校”，但收藏学校里没有符合条件的结果。"
       : "没有查到符合条件的结果，可以试试调整分数、年份或关键词。";
@@ -637,32 +853,55 @@ function renderResults(payload) {
     return;
   }
 
-  payload.groups.forEach((group, index) => {
+  pagination.items.forEach((school, index) => {
+    const group = school.primary_group;
     const node = els.groupTemplate.content.firstElementChild.cloneNode(true);
     node.style.animationDelay = `${Math.min(index * 35, 420)}ms`;
-    node.querySelector(".school-year").textContent = `${group.year} 年`;
-    node.querySelector(".school-name").textContent = group.school_name;
+    node.querySelector(".school-year").textContent = school.year_label;
+    node.querySelector(".school-name").textContent = school.school_name;
 
     const favoriteButton = node.querySelector(".favorite-star");
-    favoriteButton.dataset.school = group.school_name;
-    favoriteButton.dataset.favorite = group.is_favorite ? "true" : "false";
-    favoriteButton.textContent = group.is_favorite ? "★ 已收藏" : "☆ 收藏";
+    favoriteButton.dataset.school = school.school_name;
+    favoriteButton.dataset.favorite = school.is_favorite ? "true" : "false";
+    favoriteButton.textContent = school.is_favorite ? "★ 已收藏" : "☆ 收藏";
 
-    node.querySelector(".score-badge").textContent = `专业组投档线 ${group.score}`;
+    node.querySelector(".score-badge").textContent = `最高参考线 ${group.score}`;
     node.querySelector(".tier-badge").textContent = `${group.recommendation_tier}档`;
     node.querySelector(".tier-badge").dataset.tier = group.recommendation_tier;
     node.querySelector(".delta-badge").textContent =
       group.score_delta >= 0 ? `高出历史线 ${group.score_delta}` : `低于历史线 ${Math.abs(group.score_delta)}`;
 
     const meta = node.querySelector(".school-meta");
-    meta.append(createTag(group.official_group_name));
+    meta.append(createTag(`专业组 ${school.group_count} 个`));
+    meta.append(createTag(`专业 ${school.major_count} 个`));
     meta.append(createTag(group.official_group_category));
     meta.append(createTag(group.elective_info || "选科信息待补"));
-    meta.append(createTag(`专业 ${group.major_count} 个`));
     meta.append(createTag(group.recommendation_hint, "tag-soft"));
-    node.querySelector(".detail-button").dataset.school = group.school_name;
+    node.querySelector(".detail-button").dataset.school = school.school_name;
 
-    renderMajors(node.querySelector(".major-list"), group.majors, payload.query);
+    const majorList = node.querySelector(".major-list");
+    school.groups.forEach((schoolGroup) => {
+      const section = document.createElement("section");
+      section.className = "school-group-section";
+      section.innerHTML = `
+        <div class="school-group-head">
+          <div>
+            <strong>${schoolGroup.official_group_name}</strong>
+            <span>${schoolGroup.year} 年 · ${schoolGroup.official_group_category}</span>
+          </div>
+          <div class="school-group-head-side">
+            <span class="tag">投档线 ${schoolGroup.score}</span>
+            <span class="tag tag-soft">${schoolGroup.recommendation_tier}档</span>
+            <span class="tag">专业 ${schoolGroup.major_count} 个</span>
+          </div>
+        </div>
+      `;
+      const majorsNode = document.createElement("div");
+      majorsNode.className = "group-major-list";
+      renderMajors(majorsNode, schoolGroup.majors, payload.query);
+      section.append(majorsNode);
+      majorList.append(section);
+    });
     els.results.append(node);
   });
 }
@@ -685,7 +924,7 @@ function buildSearchParams({ exportMode = false, favoritesOnlyOverride = null } 
   }
   params.set(
     "limit",
-    exportMode ? String(Math.max(state.currentPayload?.summary.group_count || 200, 200)) : els.limitInput.value.trim(),
+    exportMode ? String(Math.max(state.currentPayload?.summary.group_count || 200, 200)) : "5000",
   );
   if (state.currentTier) {
     params.set("tier", state.currentTier);
@@ -786,7 +1025,7 @@ async function search() {
   const legacyPayload = await fetchJson("/api/legacy-school-lines", buildSearchParams());
   renderResults(payload);
   renderLegacySchoolLines(legacyPayload, state.meta);
-  els.statusText.textContent = `已返回 ${payload.summary.returned_group_count} 个专业组`;
+  els.statusText.textContent = `已返回 ${state.currentPayload.summary.school_count} 所学校，${state.currentPayload.summary.group_count} 个专业组`;
 }
 
 function downloadBlob(blob, filename) {
@@ -847,8 +1086,9 @@ function resetSearchForm() {
   els.yearSelect.value = "";
   els.schoolInput.value = "";
   els.majorInput.value = "";
-  els.limitInput.value = "24";
+  els.limitInput.value = "25";
   els.favoritesOnlyCheckbox.checked = false;
+  state.currentPage = 1;
   state.currentTier = "";
   state.schoolDetailCache.clear();
 }
@@ -894,6 +1134,7 @@ els.provinceSelect.addEventListener("change", async () => {
 
 els.searchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  state.currentPage = 1;
   try {
     await search();
   } catch (error) {
@@ -916,12 +1157,65 @@ els.tierTabs.addEventListener("click", async (event) => {
     return;
   }
   state.currentTier = button.dataset.tier || "";
+  state.currentPage = 1;
   try {
     await search();
   } catch (error) {
     showError(error);
   }
 });
+
+els.limitInput.addEventListener("change", () => {
+  state.currentPage = 1;
+  search().catch(showError);
+});
+
+function handlePageNumberClick(event) {
+  const button = event.target.closest(".page-number-button");
+  if (!button) {
+    return;
+  }
+  const page = Number(button.dataset.page || "1");
+  if (!Number.isFinite(page) || page < 1) {
+    return;
+  }
+  goToPage(page);
+}
+
+function handleJumpPageSubmit(event, input) {
+  event.preventDefault();
+  if (!state.currentPayload) {
+    return;
+  }
+  const page = Number(input.value.trim());
+  if (!Number.isFinite(page)) {
+    return;
+  }
+  goToPage(page);
+}
+
+els.prevPageButton.addEventListener("click", () => goToPage(state.currentPage - 1));
+els.prevPageButtonBottom.addEventListener("click", () => goToPage(state.currentPage - 1));
+els.nextPageButton.addEventListener("click", () => goToPage(state.currentPage + 1));
+els.nextPageButtonBottom.addEventListener("click", () => goToPage(state.currentPage + 1));
+els.pageNumberList.addEventListener("click", handlePageNumberClick);
+els.pageNumberListBottom.addEventListener("click", handlePageNumberClick);
+els.jumpPageForm.addEventListener("submit", (event) => handleJumpPageSubmit(event, els.jumpPageInput));
+els.jumpPageFormBottom.addEventListener("submit", (event) => handleJumpPageSubmit(event, els.jumpPageInputBottom));
+els.scrollTopButton.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+els.scrollTopHideButton.addEventListener("click", () => {
+  state.hideScrollTopDock = true;
+  saveUiPreferences();
+  renderScrollTopDock();
+});
+els.showScrollTopDockButton.addEventListener("click", () => {
+  state.hideScrollTopDock = false;
+  saveUiPreferences();
+  renderScrollTopDock();
+});
+window.addEventListener("scroll", renderScrollTopDock, { passive: true });
 
 els.favoritesPanel.addEventListener("click", async (event) => {
   const schoolButton = event.target.closest(".favorite-link");
@@ -1023,8 +1317,10 @@ els.schoolDetailDialog.addEventListener("close", () => {
 window.addEventListener("DOMContentLoaded", async () => {
   state.apiBase = defaultApiBase();
   state.currentProvince = defaultProvince();
+  loadUiPreferences();
   els.apiBaseInput.value = state.apiBase;
   renderFavoritesPanel();
+  renderScrollTopDock();
   try {
     await connectAndLoadMeta();
     await search();

@@ -355,6 +355,10 @@ body::before {
   margin: 0 0 12px;
 }
 
+.note-action-button {
+  margin-top: 4px;
+}
+
 .scope-panel-body {
   display: grid;
   gap: 12px;
@@ -513,6 +517,110 @@ body::before {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.pagination-bar {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.pagination-panel-bottom {
+  margin-top: 18px;
+}
+
+.pagination-summary {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-number-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-number-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.page-number-button[data-active="true"] {
+  background: linear-gradient(135deg, rgba(189, 76, 47, 0.16), rgba(47, 109, 140, 0.16));
+  color: var(--accent-dark);
+  border-color: rgba(189, 76, 47, 0.2);
+}
+
+.page-ellipsis {
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.jump-page-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.jump-page-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.jump-page-form input {
+  width: 110px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 11px 12px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.scroll-top-dock {
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  display: grid;
+  gap: 8px;
+  z-index: 30;
+}
+
+.scroll-top-button,
+.scroll-top-hide-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.scroll-top-button {
+  background: linear-gradient(135deg, rgba(189, 76, 47, 0.16), rgba(47, 109, 140, 0.14));
+  color: var(--accent-dark);
+}
+
+.scroll-top-hide-button {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .tier-tab {
@@ -708,6 +816,44 @@ body::before {
   display: grid;
   gap: 12px;
   margin-top: 14px;
+}
+
+.school-group-section {
+  display: grid;
+  gap: 12px;
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(29, 42, 49, 0.08);
+}
+
+.school-group-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.school-group-head strong {
+  display: block;
+  font-size: 16px;
+}
+
+.school-group-head span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.school-group-head-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.group-major-list {
+  display: grid;
+  gap: 12px;
 }
 
 .major-card {
@@ -1030,6 +1176,7 @@ body::before {
   .panel-head,
   .toolbar,
   .school-card-head,
+  .school-group-head,
   .major-head,
   .api-actions,
   .detail-dialog-head,
@@ -1044,5 +1191,15 @@ body::before {
 
   .detail-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .scroll-top-dock {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .scroll-top-button,
+  .scroll-top-hide-button {
+    padding: 10px 14px;
   }
 }

@@ -82,8 +82,13 @@
               </label>
 
               <label class="field">
-                <span>本页最多展示多少个专业组</span>
-                <input id="limitInput" name="limit" type="number" min="12" max="200" value="24" />
+                <span>单页展示学校数量</span>
+                <select id="limitInput" name="page_size">
+                  <option value="25">25 所</option>
+                  <option value="50">50 所</option>
+                  <option value="100">100 所</option>
+                  <option value="200">200 所</option>
+                </select>
               </label>
 
               <label class="toggle-row">
@@ -113,6 +118,9 @@
               http://127.0.0.1:5500，再点“连接服务”。
             </p>
             <p>“冲稳保”只是基于历史投档线分差做的辅助分层，不代表当年录取结论。</p>
+            <button id="showScrollTopDockButton" class="ghost-btn note-action-button" type="button" hidden>
+              重新显示回顶按钮
+            </button>
           </section>
 
           <section class="panel">
@@ -141,6 +149,19 @@
 
             <div id="summaryCards" class="summary-grid"></div>
             <div id="tierTabs" class="tier-tabs"></div>
+            <div id="paginationBarTop" class="pagination-bar" hidden>
+              <div id="paginationSummary" class="pagination-summary"></div>
+              <div class="pagination-controls">
+                <button id="prevPageButton" class="ghost-btn" type="button">上一页</button>
+                <div id="pageNumberList" class="page-number-list"></div>
+                <button id="nextPageButton" class="ghost-btn" type="button">下一页</button>
+              </div>
+              <form id="jumpPageForm" class="jump-page-form">
+                <label class="jump-page-label" for="jumpPageInput">跳转页码</label>
+                <input id="jumpPageInput" type="number" min="1" step="1" placeholder="页码" />
+                <button class="ghost-btn" type="submit">跳转</button>
+              </form>
+            </div>
           </section>
 
           <section id="legacySchoolLinesSection" class="panel" hidden>
@@ -155,8 +176,27 @@
           </section>
 
           <section id="results" class="results-grid"></section>
+
+          <section id="paginationBarBottom" class="panel pagination-panel-bottom" hidden>
+            <div id="paginationSummaryBottom" class="pagination-summary"></div>
+            <div class="pagination-controls">
+              <button id="prevPageButtonBottom" class="ghost-btn" type="button">上一页</button>
+              <div id="pageNumberListBottom" class="page-number-list"></div>
+              <button id="nextPageButtonBottom" class="ghost-btn" type="button">下一页</button>
+            </div>
+            <form id="jumpPageFormBottom" class="jump-page-form">
+              <label class="jump-page-label" for="jumpPageInputBottom">跳转页码</label>
+              <input id="jumpPageInputBottom" type="number" min="1" step="1" placeholder="页码" />
+              <button class="ghost-btn" type="submit">跳转</button>
+            </form>
+          </section>
         </section>
       </main>
+    </div>
+
+    <div id="scrollTopDock" class="scroll-top-dock" hidden>
+      <button id="scrollTopButton" class="scroll-top-button" type="button">回到顶部</button>
+      <button id="scrollTopHideButton" class="scroll-top-hide-button" type="button" aria-label="隐藏回到顶部按钮">隐藏</button>
     </div>
 
     <template id="favoriteTemplate">
