@@ -1,0 +1,56 @@
+{
+  "province_slug": "guangdong",
+  "province_name": "广东",
+  "province_code": "44",
+  "database_filename": "guangdong_gaokao_admissions_2023_2025_cleaned.sqlite3",
+  "user_subjects": ["物理", "化学", "生物"],
+  "score_range": {
+    "min": 300,
+    "max": 750
+  },
+  "search_data_note": "当前广东检索结果使用 2023-2025 本科普通类（物理）官方投档数据，并结合 gaokao.cn 广东招生计划静态数据匹配可报专业。",
+  "detail_scope_note": "学校详情趋势图展示的是当前数据库里已入库的广东本科普通类（物理）专业组投档线变化。",
+  "legacy_view_note": "",
+  "build_enabled": true,
+  "build_blockers": [],
+  "score_filter": {
+    "subject_contains": "物理"
+  },
+  "plan_filter": {
+    "local_batch_names": ["本科批"],
+    "type_codes": ["2073"]
+  },
+  "raw_source_options": {
+    "xlsx_header_row_index": 2,
+    "xlsx_data_start_row_index": 3
+  },
+  "official_sources": {
+    "2023": {
+      "title": "我省2023年普通高考本科批次正式投档",
+      "publisher": "广东省教育考试院",
+      "landing_url": "https://eea.gd.gov.cn/ptgk/content/post_4221648.html",
+      "file_url": "https://eea.gd.gov.cn/attachment/0/526/526559/4221648.zip",
+      "local_filename": "guangdong_2023_undergrad_regular_physics.zip",
+      "source_format": "zip_pdf",
+      "zip_member_keywords": ["普通类", "物理"]
+    },
+    "2024": {
+      "title": "我省2024年普通高考本科批次正式投档",
+      "publisher": "广东省教育考试院",
+      "landing_url": "https://eea.gd.gov.cn/zwgk/sjfb/tjsj/content/post_4458419.html",
+      "file_url": "https://eea.gd.gov.cn/attachment/0/554/554636/4458419.zip",
+      "local_filename": "guangdong_2024_undergrad_regular_physics.zip",
+      "source_format": "zip_pdf",
+      "zip_member_keywords": ["普通类", "物理"]
+    },
+    "2025": {
+      "title": "我省2025年普通高考本科批次正式投档",
+      "publisher": "广东省教育考试院",
+      "landing_url": "https://eea.gd.gov.cn/ptgk/content/post_4746781.html",
+      "file_url": "https://eea.gd.gov.cn/attachment/0/585/585886/4746781.pdf",
+      "local_filename": "guangdong_2025_undergrad_regular_physics.pdf",
+      "source_format": "pdf"
+    }
+  },
+  "legacy_year_notes": []
+}

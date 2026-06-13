@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>高考志愿检索台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <p id="appEyebrow" class="eyebrow">Admissions Planner</p>
+          <h1 id="appTitle">高考志愿检索台</h1>
+        </div>
+        <div class="api-panel">
+          <div class="api-grid">
+            <label class="api-field">
+              <span>省份</span>
+              <select id="provinceSelect"></select>
+            </label>
+            <label class="api-field">
+              <span>API 地址</span>
+              <input id="apiBaseInput" type="text" placeholder="http://127.0.0.1:5500" />
+            </label>
+          </div>
+          <div class="api-actions">
+            <button id="connectButton" class="ghost-btn" type="button">连接服务</button>
+            <span id="connectionState" class="connection-pill">未连接</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <p id="heroKicker" class="hero-kicker">真实数据，本地检索</p>
+          <h2 id="heroTitle">输入你的分数，直接看可考虑的学校、专业组和专业明细</h2>
+          <p id="heroText" class="hero-text"></p>
+          <div class="hero-notes">
+            <span id="tierNoteChong" class="chip chip-warm"></span>
+            <span id="tierNoteWen" class="chip chip-calm"></span>
+            <span id="tierNoteBao" class="chip chip-safe"></span>
+          </div>
+        </div>
+        <div id="datasetMeta" class="hero-metrics"></div>
+      </section>
+
+      <main class="main-grid">
+        <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>检索条件</h3>
+              <span id="statusText" class="panel-note">等待检索</span>
+            </div>
+
+            <form id="searchForm" class="search-form">
+              <label class="field">
+                <span>预估分</span>
+                <input id="scoreInput" name="score" type="number" min="0" max="750" value="450" required />
+              </label>
+
+              <label class="field">
+                <span>最低分（可空）</span>
+                <input id="minScoreInput" name="min_score" type="number" min="0" max="750" placeholder="例如 430" />
+              </label>
+
+              <label class="field">
+                <span>年份</span>
+                <select id="yearSelect" name="year">
+                  <option value="">全部年份</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>学校关键词</span>
+                <input id="schoolInput" name="school" type="text" placeholder="如：师范、理工、大学" />
+              </label>
+
+              <label class="field">
+                <span>专业关键词</span>
+                <input id="majorInput" name="major" type="text" placeholder="如：计算机、临床、法学" />
+              </label>
+
+              <label class="field">
+                <span>本页最多展示多少个专业组</span>
+                <input id="limitInput" name="limit" type="number" min="12" max="200" value="24" />
+              </label>
+
+              <label class="toggle-row">
+                <input id="favoritesOnlyCheckbox" type="checkbox" />
+                <span>只看已收藏学校</span>
+              </label>
+
+              <div class="actions">
+                <button class="primary-btn" type="submit">检索结果</button>
+                <button id="resetButton" class="ghost-btn" type="button">重置</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>学校收藏</h3>
+              <span id="favoriteCountText" class="panel-note">0 所</span>
+            </div>
+            <div id="favoritesPanel" class="favorites-panel"></div>
+          </section>
+
+          <section class="panel note-panel">
+            <h3>使用提醒</h3>
+            <p id="usageHintApi">
+              如果页面是直接双击 HTML 打开的，请把上面的 API 地址填成你启动服务的地址，比如
+              http://127.0.0.1:5500，再点“连接服务”。
+            </p>
+            <p>“冲稳保”只是基于历史投档线分差做的辅助分层，不代表当年录取结论。</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>数据口径</h3>
+              <span class="panel-note">真实性提示</span>
+            </div>
+            <div id="dataScopePanel" class="scope-panel-body"></div>
+          </section>
+        </aside>
+
+        <section class="content">
+          <section class="panel">
+            <div class="toolbar">
+              <div>
+                <h3>结果总览</h3>
+                <p class="toolbar-note">先筛学校，再展开看专业。</p>
+              </div>
+              <div class="export-actions">
+                <button id="exportCsvButton" class="ghost-btn" type="button">导出当前 CSV</button>
+                <button id="exportExcelButton" class="ghost-btn" type="button">导出当前 Excel</button>
+                <button id="exportFavoritesCsvButton" class="ghost-btn" type="button">导出收藏 CSV</button>
+                <button id="exportFavoritesExcelButton" class="ghost-btn" type="button">导出收藏 Excel</button>
+              </div>
+            </div>
+
+            <div id="summaryCards" class="summary-grid"></div>
+            <div id="tierTabs" class="tier-tabs"></div>
+          </section>
+
+          <section id="legacySchoolLinesSection" class="panel" hidden>
+            <div class="toolbar">
+              <div>
+                <h3>2023 学校线参考</h3>
+                <p class="toolbar-note">单独展示学校级批次投档线，不混入专业推荐。</p>
+              </div>
+            </div>
+            <div id="legacySchoolLinesSummary" class="summary-grid legacy-summary-grid"></div>
+            <div id="legacySchoolLinesResults" class="legacy-lines-grid"></div>
+          </section>
+
+          <section id="results" class="results-grid"></section>
+        </section>
+      </main>
+    </div>
+
+    <template id="favoriteTemplate">
+      <div class="favorite-item">
+        <button class="favorite-link" type="button"></button>
+        <button class="favorite-remove" type="button">移除</button>
+      </div>
+    </template>
+
+    <template id="groupTemplate">
+      <article class="school-card">
+        <div class="school-card-head">
+          <div class="school-main">
+            <p class="school-year"></p>
+            <h3 class="school-name"></h3>
+          </div>
+          <button class="favorite-star" type="button" title="收藏学校"></button>
+        </div>
+
+        <div class="school-badges">
+          <span class="score-badge"></span>
+          <span class="tier-badge"></span>
+          <span class="delta-badge"></span>
+        </div>
+
+        <div class="school-meta"></div>
+
+        <div class="school-actions">
+          <button class="detail-button ghost-btn" type="button">学校详情</button>
+        </div>
+
+        <details class="major-details">
+          <summary>查看专业明细</summary>
+          <div class="major-list"></div>
+        </details>
+      </article>
+    </template>
+
+    <template id="majorTemplate">
+      <div class="major-card">
+        <div class="major-head">
+          <strong class="major-name"></strong>
+          <span class="major-code"></span>
+        </div>
+        <div class="major-tags"></div>
+      </div>
+    </template>
+
+    <template id="legacySchoolLineTemplate">
+      <article class="legacy-line-card">
+        <div class="legacy-line-head">
+          <div>
+            <p class="legacy-line-year"></p>
+            <h4 class="legacy-line-school"></h4>
+          </div>
+          <span class="legacy-line-score"></span>
+        </div>
+        <div class="legacy-line-meta"></div>
+        <p class="legacy-line-note"></p>
+      </article>
+    </template>
+
+    <dialog id="schoolDetailDialog" class="detail-dialog">
+      <div class="detail-dialog-shell">
+        <div class="detail-dialog-head">
+          <div>
+            <p id="detailDialogEyebrow" class="dialog-eyebrow"></p>
+            <h3 id="detailDialogTitle" class="dialog-title"></h3>
+          </div>
+          <button id="detailDialogClose" class="ghost-btn" type="button">关闭</button>
+        </div>
+
+        <div id="detailDialogSummary" class="detail-summary-grid"></div>
+        <div id="detailDialogChart" class="detail-chart"></div>
+        <div id="detailDialogYears" class="detail-years"></div>
+        <p id="detailDialogNote" class="detail-note"></p>
+      </div>
+    </dialog>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

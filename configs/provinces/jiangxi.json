@@ -1,0 +1,94 @@
+{
+  "province_slug": "jiangxi",
+  "province_name": "江西",
+  "province_code": "36",
+  "database_filename": "jiangxi_gaokao_admissions_2024_2025.sqlite3",
+  "user_subjects": ["物理", "化学", "生物"],
+  "score_range": {
+    "min": 300,
+    "max": 750
+  },
+  "search_data_note": "当前江西检索结果只包含 2024-2025 本科批物理类、可匹配到专业组的真实入库数据。",
+  "detail_scope_note": "学校详情图表仅展示 2024-2025 已入库专业组趋势；2023 官方数据属于第一批/第二批本科学校投档线，未混入图表。",
+  "legacy_view_note": "2023 参考区块展示的是学校级批次投档线，只能用来辅助观察院校门槛，不能当作专业组线或专业最低录取分。",
+  "build_enabled": true,
+  "build_blockers": [],
+  "score_filter": {
+    "subject_contains": "物理类"
+  },
+  "plan_filter": {
+    "local_batch_names": ["本科批"],
+    "type_codes": ["2073"]
+  },
+  "raw_source_options": {
+    "xlsx_header_row_index": 2,
+    "xlsx_data_start_row_index": 3
+  },
+  "official_sources": {
+    "2024": {
+      "title": "江西省2024年普通高校招生本科投档情况统计表(历史类、物理类、三校生类)",
+      "publisher": "江西省教育考试院",
+      "landing_url": "http://www.jxeea.cn/jxsjyksy/dtxx67/content/content_1856090704419688448.html",
+      "file_url": "http://www.jxeea.cn/jxsjyksy/dtxx67/1856090704419688448/MNwXup7k.pdf",
+      "local_filename": "2024_undergrad_statistics_history_physics_sanxiaosheng.pdf",
+      "source_format": "pdf"
+    },
+    "2025": {
+      "title": "江西省2025年普通高校招生本科投档情况统计表(历史类、物理类、三校生类)",
+      "publisher": "江西省教育考试院",
+      "landing_url": "http://www.jxeea.cn/jxsjyksy/gsgg91/content/content_1946824770752524288.html",
+      "file_url": "http://www.jxeea.cn/jxsjyksy/gsgg91/1946824770752524288/6GtVOODt.pdf",
+      "local_filename": "2025_undergrad_statistics_history_physics_sanxiaosheng.pdf",
+      "source_format": "pdf"
+    }
+  },
+  "legacy_year_notes": [
+    {
+      "year": 2023,
+      "title": "2023 官方数据已核实，但属于学校级批次投档线",
+      "summary": "江西 2023 官方 PDF 是第一批/第二批本科院校投档情况统计表，不是 2024-2025 这种专业组口径，因此当前没有混入专业推荐、专业卡片和学校趋势图。",
+      "sources": [
+        {
+          "label": "第一批本科公告页",
+          "url": "http://www.jxeea.cn/jxsjyksy/gsgg91/content/content_1856067033365942272.html"
+        },
+        {
+          "label": "第一批本科 PDF",
+          "url": "http://www.jxeea.cn/jxsjyksy/gsgg91/1856067033365942272/4h1uxe8U.pdf"
+        },
+        {
+          "label": "第二批本科公告页",
+          "url": "http://www.jxeea.cn/jxsjyksy/gsgg91/content/content_1856058645798129664.html"
+        },
+        {
+          "label": "第二批本科 PDF",
+          "url": "http://www.jxeea.cn/jxsjyksy/gsgg91/1856058645798129664/HYyhX7Nb.pdf"
+        }
+      ]
+    }
+  ],
+  "legacy_school_line_sources": {
+    "2023_first_batch": {
+      "year": 2023,
+      "batch": "本科一批",
+      "title": "江西省2023年普通高校招生第一批本科文史、理工类投档情况统计表",
+      "publisher": "江西省教育考试院",
+      "landing_url": "http://www.jxeea.cn/jxsjyksy/gsgg91/content/content_1856067033365942272.html",
+      "file_url": "http://www.jxeea.cn/jxsjyksy/gsgg91/1856067033365942272/4h1uxe8U.pdf",
+      "local_filename": "2023_first_batch_undergrad_history_science.pdf",
+      "source_format": "pdf",
+      "subject_contains": "理工"
+    },
+    "2023_second_batch": {
+      "year": 2023,
+      "batch": "本科二批",
+      "title": "江西省2023年普通高校招生第二批本科文史、理工类，三校生文理类投档情况统计表",
+      "publisher": "江西省教育考试院",
+      "landing_url": "http://www.jxeea.cn/jxsjyksy/gsgg91/content/content_1856058645798129664.html",
+      "file_url": "http://www.jxeea.cn/jxsjyksy/gsgg91/1856058645798129664/HYyhX7Nb.pdf",
+      "local_filename": "2023_second_batch_undergrad_history_science_sanxiaosheng.pdf",
+      "source_format": "pdf",
+      "subject_contains": "理工"
+    }
+  }
+}
