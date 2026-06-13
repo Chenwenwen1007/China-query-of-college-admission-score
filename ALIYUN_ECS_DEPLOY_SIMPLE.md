@@ -10,14 +10,14 @@
 部署完成后，朋友可直接访问：
 
 ```text
-http://你的服务器公网IP:8000/?province=hunan
+http://你的服务器公网IP:5500/?province=hunan
 ```
 
 也可以切换省份：
 
 ```text
-http://你的服务器公网IP:8000/?province=guangdong
-http://你的服务器公网IP:8000/?province=jiangxi
+http://你的服务器公网IP:5500/?province=guangdong
+http://你的服务器公网IP:5500/?province=jiangxi
 ```
 
 ## 方案说明
@@ -45,13 +45,13 @@ http://你的服务器公网IP:8000/?province=jiangxi
 先确认你的 ECS 满足这两点：
 
 1. 已分配公网 IP
-2. 安全组已放行 `8000` 端口
+2. 安全组已放行 `5500` 端口
 
 ### 安全组放行示例
 
 - 方向：入方向
 - 协议类型：自定义 TCP
-- 端口范围：`8000/8000`
+- 端口范围：`5500/5500`
 - 授权对象：`0.0.0.0/0`
 
 如果你后面想更正式一点，也可以改成开放 `80` 端口。
@@ -146,13 +146,13 @@ pip install pandas pdfplumber requests
 ```bash
 cd /opt/China-query-of-college-admission-score
 source .venv/bin/activate
-python3 frontend_server.py --province hunan --host 0.0.0.0 --port 8000
+python3 frontend_server.py --province hunan --host 0.0.0.0 --port 5500
 ```
 
 如果看到类似输出：
 
 ```text
-Serving hunan default on http://0.0.0.0:8000
+Serving hunan default on http://0.0.0.0:5500
 ```
 
 说明服务已经启动。
@@ -160,7 +160,7 @@ Serving hunan default on http://0.0.0.0:8000
 这时在你自己的电脑浏览器打开：
 
 ```text
-http://你的服务器公网IP:8000/?province=hunan
+http://你的服务器公网IP:5500/?province=hunan
 ```
 
 如果能打开页面，说明公网访问已经通了。
@@ -182,7 +182,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/China-query-of-college-admission-score
-ExecStart=/opt/China-query-of-college-admission-score/.venv/bin/python frontend_server.py --province hunan --host 0.0.0.0 --port 8000
+ExecStart=/opt/China-query-of-college-admission-score/.venv/bin/python frontend_server.py --province hunan --host 0.0.0.0 --port 5500
 Restart=always
 RestartSec=3
 
@@ -216,14 +216,14 @@ journalctl -u admissions -f
 部署完成后可直接访问：
 
 ```text
-http://你的服务器公网IP:8000/?province=hunan
+http://你的服务器公网IP:5500/?province=hunan
 ```
 
 其他省份：
 
 ```text
-http://你的服务器公网IP:8000/?province=guangdong
-http://你的服务器公网IP:8000/?province=jiangxi
+http://你的服务器公网IP:5500/?province=guangdong
+http://你的服务器公网IP:5500/?province=jiangxi
 ```
 
 ## 九、后续更新项目
@@ -247,14 +247,14 @@ systemctl restart admissions
 优先检查这几项：
 
 - ECS 是否真的有公网 IP
-- 安全组是否放行了 `8000`
-- 服务器系统防火墙是否拦截了 `8000`
-- 服务是否成功监听在 `0.0.0.0:8000`
+- 安全组是否放行了 `5500`
+- 服务器系统防火墙是否拦截了 `5500`
+- 服务是否成功监听在 `0.0.0.0:5500`
 
 可在服务器执行：
 
 ```bash
-ss -ltnp | grep 8000
+ss -ltnp | grep 5500
 ```
 
 ### 2. 能 SSH，但网页打不开
@@ -264,7 +264,7 @@ ss -ltnp | grep 8000
 Ubuntu 如果启用了 `ufw`，可以执行：
 
 ```bash
-ufw allow 8000/tcp
+ufw allow 5500/tcp
 ufw status
 ```
 
@@ -292,8 +292,8 @@ ufw status
 1. 把整个项目目录上传到 ECS
 2. 安装 `python3`、`python3-venv`
 3. 用虚拟环境安装 `openpyxl`
-4. 用 `python3 frontend_server.py --host 0.0.0.0 --port 8000` 启动
-5. 放行阿里云安全组 `8000`
+4. 用 `python3 frontend_server.py --host 0.0.0.0 --port 5500` 启动
+5. 放行阿里云安全组 `5500`
 6. 用 `systemd` 常驻
 
 这样就能先稳定给朋友用了。
